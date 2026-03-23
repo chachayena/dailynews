@@ -1,11 +1,20 @@
 name: Daily News Mail
 
-# 수동 실행 테스트
 on:
-  workflow_dispatch:
+  workflow_dispatch: # 수동 테스트용
+  schedule:
+    - cron: '0 23 * * *'  # 매일 한국시간 8시 (UTC)
 
 jobs:
-  test:
+  send_news:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "GitHub Actions works!"
+      - uses: actions/checkout@v3
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Install dependencies
+        run:  pip install -r requirements.txt
+      - name: Send Daily News
+        run: python main.py
