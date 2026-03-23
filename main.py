@@ -50,6 +50,12 @@ if __name__ == "__main__":
     kr_news = get_kr_news()
 
     summary = make_summary(us_news, kr_news)
-    send_email(summary)
 
-    print("메일 발송 완료 ")
+    print("메일 보내기 시작")
+
+try:
+    send_email(summary)
+    print("메일 성공")
+except Exception as e:
+    print("메일 실패:", e)
+    
