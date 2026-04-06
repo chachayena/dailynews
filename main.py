@@ -9,6 +9,11 @@ APP_PASSWORD = os.getenv("APP_PASSWORD")
 NEWS_API_KEY = os.getenv("NEWS_API_KEY")
 RECIPIENTS = os.getenv("RECIPIENTS")
 
+print("메일:", os.getenv("EMAIL"))
+print("앱비번:", os.getenv("APP_PASSWORD"))
+print("뉴스키:", os.getenv("NEWS_API_KEY"))
+print("수신자:", os.getenv("RECIPIENTS"))
+
 # 환경변수 체크
 if not EMAIL:
     raise ValueError("EMAIL 환경변수가 설정되지 않음")
