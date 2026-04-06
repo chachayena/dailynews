@@ -1,8 +1,12 @@
+import os
 import requests
 import smtplib
 from email.mime.text import MIMEText
-import os
+from email.mime.multipart import MIMEMultipart
+from email.mime.application import MIMEApplication
 from datetime import datetime, timedelta
+import pdfkit  # PDF 변환용 (pip install pdfkit)
+import tempfile
 
 # 환경변수 불러오기
 EMAIL = os.getenv("EMAIL")
@@ -70,13 +74,20 @@ if not recipients:
 
 #    summary = make_summary(us_news, kr_news)
 
+#    print("메일 보내기 시작")
+#    try:
+#        send_email(summary)
+#        print("메일 성공")
+#    except Exception as e:
+#        print("메일 실패:", e)
+
+
 # 한국 부동산 뉴스 키워드
 KEYWORDS = [
-    "부동산", "주택시장", "아파트 매매", "오피스텔",
+    "부동산", "주택시장", "아파트 매매", 
     "집값", "전세", "월세", "부동산 정책",
-    "부동산 규제", "재개발", "재건축", "서울 부동산",
-    "강남 부동산", "수도권 아파트", "지방 부동산"
-]
+    "부동산 규제", "서울 부동산",
+    "강남 부동산", "수도권 아파트"]
 
 # 지난 7일 뉴스 날짜 범위
 to_date = datetime.today()
@@ -98,37 +109,71 @@ def get_kr_real_estate_news():
     )
     res = requests.get(url)
     data = res.json()
-    return data.get("articles", [])[:10]  # 최대 10건 요약
+    articles = data.get("articles", [])
+    return articles[:10]  # 최대 10개
 
-# 메일 내용 만들기
-def make_summary(kr_news):
-    summary = f"📅 한국 부동산 뉴스 요약 ({from_str} ~ {to_str})\n\n"
-    if not kr_news:
-        summary += "이번 주 한국 부동산 관련 뉴스가 없습니다.\n"
-    else:
-        for i, news in enumerate(kr_news, 1):
-            summary += f"{i}. {news['title']}\n{news['url']}\n\n"
-    return summary
+# -----------------------------
+# 보고서 생성 (HTML)
+# -----------------------------
+def make_html_report(news_list):
+    today = datetime.today().strftime("%Y-%m-%d")
+    html = f"<h2>한국 부동산 뉴스 요약 ({today})</h2>"
+    
+    if not news_list:
+        html += "<p>이번 주 한국 부동산 관련 뉴스가 없습니다.</p>"
+        return html
 
+    html += "<ul>"
+    for i, article in enumerate(news_list, 1):
+        html += f'<li>{i}. <a href="{article["url"]}">{article["title"]}</a></li>'
+    html += "</ul>"
+    return html
+
+# -----------------------------
+# PDF 생성
+# -----------------------------
+def create_pdf(html_content):
+    tmp_pdf = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
+    pdfkit.from_string(html_content, tmp_pdf.name)
+    return tmp_pdf.name
+
+# -----------------------------
 # 이메일 발송
-def send_email(content):
-    msg = MIMEText(content)
-    msg["Subject"] = f"한국 부동산 뉴스 요약 ({from_str}~{to_str})"
+# -----------------------------
+def send_email(html_content, pdf_path):
+    msg = MIMEMultipart()
+    msg["Subject"] = "한국 부동산 뉴스 보고서"
     msg["From"] = EMAIL
     msg["To"] = ", ".join(recipients)
 
+    # HTML 본문
+    msg.attach(MIMEText(html_content, "html"))
+
+    # PDF 첨부
+    with open(pdf_path, "rb") as f:
+        part = MIMEApplication(f.read(), Name="report.pdf")
+        part['Content-Disposition'] = 'attachment; filename="report.pdf"'
+        msg.attach(part)
+
+    # SMTP 발송
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
         server.login(EMAIL, APP_PASSWORD)
         server.sendmail(EMAIL, recipients, msg.as_string())
 
+# -----------------------------
 # 실행
+# -----------------------------
 if __name__ == "__main__":
-    kr_news = get_kr_real_estate_news()
-    summary = make_summary(kr_news)
+    print("뉴스 수집 시작...")
+    kr_news = get_kr_realestate_news()
+    
+    print("보고서 생성...")
+    html_report = make_html_report(kr_news)
+    pdf_file = create_pdf(html_report)
 
-    print("메일 보내기 시작")
+    print("메일 보내기 시작...")
     try:
-        send_email(summary)
-        print("메일 성공")
+        send_email(html_report, pdf_file)
+        print("메일 성공!")
     except Exception as e:
         print("메일 실패:", e)
