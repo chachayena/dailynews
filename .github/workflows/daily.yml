@@ -1,29 +1,52 @@
 name: Daily News Mail
 
 on:
-  workflow_dispatch:  # 수동 테스트용
+  workflow_dispatch:
   schedule:
-    - cron: '0 14 * * 3'  # 매주 수요일 동부시간 오전 10시
+    - cron: '0 14 * * 3'
 
 jobs:
   send_news:
     runs-on: ubuntu-latest
 
     steps:
-      # 소스코드 가져오기
       - uses: actions/checkout@v4
 
-      # Python 설정
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
-      # 의존성 설치
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      # 환경변수 확인 (debug)
+      # 환경변수 확인 및 RECIPIENTS 체크
+      - name: Check environment variables
+        run: |
+          if [ -z "$EMAIL" ]; then
+            echo "ERROR: EMAIL 환경변수가 설정되지 않음"
+            exit 1
+          fi
+          if [ -z "$APP_PASSWORD" ]; then
+            echo "ERROR: APP_PASSWORD 환경변수가 설정되지 않음"
+            exit 1
+          fi
+          if [ -z "$NEWS_API_KEY" ]; then
+            echo "ERROR: NEWS_API_KEY 환경변수가 설정되지 않음"
+            exit 1
+          fi
+          if [ -z "$RECIPIENTS" ]; then
+            echo "ERROR: RECIPIENTS 환경변수가 비어있음"
+            exit 1
+          fi
+          echo "모든 환경변수 정상"
+        env:
+          EMAIL: ${{ secrets.EMAIL }}
+          APP_PASSWORD: ${{ secrets.APP_PASSWORD }}
+          NEWS_API_KEY: ${{ secrets.NEWS_API_KEY }}
+          RECIPIENTS: ${{ secrets.RECIPIENTS }}
+
+      # 환경변수 출력 (debug)
       - name: Print envs (debug)
         run: |
           echo "EMAIL: $EMAIL"
@@ -36,7 +59,6 @@ jobs:
           NEWS_API_KEY: ${{ secrets.NEWS_API_KEY }}
           RECIPIENTS: ${{ secrets.RECIPIENTS }}
 
-      # 뉴스 발송
       - name: Send Daily News
         run: python main.py
         env:
