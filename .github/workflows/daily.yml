@@ -19,6 +19,19 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      - name: Print envs (debug)
+        run: |
+        echo "EMAIL: $EMAIL"
+        echo "APP_PASSWORD: $APP_PASSWORD"
+        echo "NEWS_API_KEY: $NEWS_API_KEY"
+        echo "RECIPIENTS: $RECIPIENTS"
+        env:
+          EMAIL: ${{ secrets.EMAIL }}
+          APP_PASSWORD: ${{ secrets.APP_PASSWORD }}
+          NEWS_API_KEY: ${{ secrets.NEWS_API_KEY }}
+          RECIPIENTS: ${{ secrets.RECIPIENTS }}
+
+
       - name: Send Daily News
         run: python main.py
         env:
@@ -27,14 +40,3 @@ jobs:
           NEWS_API_KEY: ${{ secrets.NEWS_API_KEY }}
           RECIPIENTS: ${{ secrets.RECIPIENTS }}
       
-      - name: Print EMAIL (debug)
-        run: echo "EMAIL: $RECIPIEMAILNTS"
-
-      - name: Print APP_PASSWORD (debug)
-        run: echo "APP_PASSWORD: $APP_PASSWORD"       
-
-      - name: Print NEWS_API_KEY (debug)
-        run: echo "NEWS_API_KEY: $NEWS_API_KEY"
-
-      - name: Print recipients (debug)
-        run: echo "RECIPIENTS: $RECIPIENTS"
