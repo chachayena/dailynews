@@ -2,6 +2,7 @@ import requests
 import smtplib
 from email.mime.text import MIMEText
 import os
+from datetime import datetime, timedelta
 
 # 환경변수 불러오기
 EMAIL = os.getenv("EMAIL")
