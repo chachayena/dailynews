@@ -142,8 +142,8 @@ def summarize(text, max_words=50):
 # -----------------------------
 # 보고서 생성 (HTML)
 # -----------------------------
-def make_html_report(news_list):
-    today = datetime.today().strftime("%Y-%m-%d")
+def make_html_report(news_list, from_date, to_date):
+    period = f"{from_date.strftime('%Y-%m-%d')} ~ {to_date.strftime('%Y-%m-%d')}"
     
     html = f"""
     <html>
@@ -160,11 +160,10 @@ def make_html_report(news_list):
         </style>
     </head>
     <body>
-        <h2>한국 부동산 뉴스 요약 ({today})</h2>
+        <h2>한국 부동산 뉴스 요약 ({period})</h2>
     """
-
     if not news_list:
-        html += "<p>이번 주 한국 부동산 관련 뉴스가 없습니다.</p>"
+        html += "<p>이번 기간 동안 한국 부동산 관련 뉴스가 없습니다.</p>"
         html += "</body></html>"
         return html
 
@@ -219,7 +218,7 @@ if __name__ == "__main__":
     kr_news = get_kr_real_estate_news()
     
     print("보고서 생성...")
-    html_report = make_html_report(kr_news)
+    html_report = make_html_report(kr_news, from_date, to_date)
     pdf_file = create_pdf(html_report)
 
     print("메일 보내기 시작...")
