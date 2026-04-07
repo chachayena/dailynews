@@ -96,11 +96,19 @@ to_str = to_date.strftime("%Y-%m-%d")
 from_str = from_date.strftime("%Y-%m-%d")
 
 # 한국 부동산 뉴스 가져오기
+def filter_real_estate_articles(articles):
+    filtered = []
+    for article in articles:
+        text = (article.get('title','') + ' ' + article.get('content','')).lower()
+        if any(kw.lower() in text for kw in KEYWORDS):
+            filtered.append(article)
+    return filtered
+
 def get_kr_real_estate_news():
     query = " OR ".join(KEYWORDS)
     url = (
         f"https://newsapi.org/v2/everything?"
-        f"q={query}&"
+        f"qInTitle={query}&"
         f"from={from_str}&"
         f"to={to_str}&"
         f"language=ko&"
@@ -110,11 +118,12 @@ def get_kr_real_estate_news():
     res = requests.get(url)
     data = res.json()
     articles = data.get("articles", [])
+    articles = filter_real_estate_articles(articles)
     return articles[:10]  # 최대 10개
 
 
 # 뉴스요약
-def summarize(text, max_words=100):
+def summarize(text, max_words=50):
     """
     간단 요약 함수: 텍스트를 max_words 단어로 자르고 '...' 추가
     """
