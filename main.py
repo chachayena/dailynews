@@ -112,6 +112,24 @@ def get_kr_real_estate_news():
     articles = data.get("articles", [])
     return articles[:10]  # 최대 10개
 
+
+# 뉴스요약
+def summarize(text, max_words=100):
+    """
+    간단 요약 함수: 텍스트를 max_words 단어로 자르고 '...' 추가
+    """
+    if not text:
+        return "내용 없음"
+    
+    # 한글 기준으로 공백 기준 단어 분리
+    words = text.split()
+    
+    if len(words) <= max_words:
+        return text
+    
+    return ' '.join(words[:max_words]) + '...'
+
+
 # -----------------------------
 # 보고서 생성 (HTML)
 # -----------------------------
