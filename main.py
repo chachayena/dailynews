@@ -99,8 +99,9 @@ from_str = from_date.strftime("%Y-%m-%d")
 def filter_real_estate_articles(articles):
     filtered = []
     for article in articles:
-        text = (article.get('title','') + ' ' + article.get('content','')).lower()
-        if any(kw.lower() in text for kw in KEYWORDS):
+        title_text = article.get('title', '').lower()
+        content_text = article.get('content', '').lower()
+        if any(kw.lower() in title_text for kw in KEYWORDS) or any(kw.lower() in content_text for kw in KEYWORDS):
             filtered.append(article)
     return filtered
 
