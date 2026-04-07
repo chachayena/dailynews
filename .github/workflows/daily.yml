@@ -22,10 +22,10 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: wkhtmltopdf 설치 (최적 타협)
+      - name: wkhtmltopdf 설치 (최적 타협+한글설치)
         run: |
           sudo apt-get update -y
-          sudo apt-get install -y wkhtmltopdf || sudo apt-get install -y --fix-missing wkhtmltopdf
+          sudo apt-get install -y wkhtmltopdf fonts-nanum || sudo apt-get install -y --fix-missing wkhtmltopdf fonts-nanum
 
 #      - name: Print envs (debug)
 #        run: |

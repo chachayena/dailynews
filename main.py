@@ -117,16 +117,40 @@ def get_kr_real_estate_news():
 # -----------------------------
 def make_html_report(news_list):
     today = datetime.today().strftime("%Y-%m-%d")
-    html = f"<h2>한국 부동산 뉴스 요약 ({today})</h2>"
     
+    html = f"""
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <style>
+            body {{
+                font-family: 'NanumGothic', 'Apple SD Gothic Neo', sans-serif;
+                line-height: 1.5;
+            }}
+            h2 {{ color: #2c3e50; }}
+            h3 {{ margin-bottom: 5px; }}
+            p {{ margin-top: 0; margin-bottom: 15px; }}
+        </style>
+    </head>
+    <body>
+        <h2>한국 부동산 뉴스 요약 ({today})</h2>
+    """
+
     if not news_list:
         html += "<p>이번 주 한국 부동산 관련 뉴스가 없습니다.</p>"
+        html += "</body></html>"
         return html
 
-    html += "<ul>"
     for i, article in enumerate(news_list, 1):
-        html += f'<li>{i}. <a href="{article["url"]}">{article["title"]}</a></li>'
-    html += "</ul>"
+        content = summarize(article.get('content', '내용 없음'), max_words=50)
+        html += f"""
+        <h3>{i}. {article['title']}</h3>
+        <p>{content}</p>
+        <p><a href="{article['url']}">원문 보기</a></p>
+        <hr>
+        """
+
+    html += "</body></html>"
     return html
 
 # -----------------------------
