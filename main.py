@@ -165,7 +165,7 @@ def send_email(html_content, pdf_path):
 # -----------------------------
 if __name__ == "__main__":
     print("뉴스 수집 시작...")
-    kr_news = get_kr_realestate_news()
+    kr_news = get_kr_real_estate_news()
     
     print("보고서 생성...")
     html_report = make_html_report(kr_news)
