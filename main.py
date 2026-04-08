@@ -255,8 +255,6 @@ def make_html_report(news_list, from_date, to_date):
         <hr>
         """
 
-CSS도 조금 추가하면 PDF에서 보기 좋
-
     html += "</div></body></html>"
     return html
 
