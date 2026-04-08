@@ -27,18 +27,6 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install -y wkhtmltopdf fonts-nanum || sudo apt-get install -y --fix-missing wkhtmltopdf fonts-nanum
 
-#      - name: Print envs (debug)
-#        run: |
-#          echo "EMAIL: $EMAIL"
-#          echo "APP_PASSWORD: $APP_PASSWORD"
-#          echo "NEWS_API_KEY: $NEWS_API_KEY"
-#          echo "RECIPIENTS: $RECIPIENTS"
-#        env:
-#          EMAIL: ${{ secrets.EMAIL }}
-#          APP_PASSWORD: ${{ secrets.APP_PASSWORD }}
-#          NEWS_API_KEY: ${{ secrets.NEWS_API_KEY }}
-#          RECIPIENTS: ${{ secrets.RECIPIENTS }}
-
       - name: Send Daily News
         run: python main.py
         env:
