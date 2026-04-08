@@ -20,7 +20,7 @@ jobs:
           cache: 'pip'   # 🔥 핵심 (속도 개선)
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: pip install -r requirements.txt  
 
       - name: wkhtmltopdf 설치 (최적 타협+한글설치)
         run: |
@@ -33,11 +33,11 @@ jobs:
 #          echo "APP_PASSWORD: $APP_PASSWORD"
 #          echo "NEWS_API_KEY: $NEWS_API_KEY"
 #          echo "RECIPIENTS: $RECIPIENTS"
-        env:
-          EMAIL: ${{ secrets.EMAIL }}
-          APP_PASSWORD: ${{ secrets.APP_PASSWORD }}
-          NEWS_API_KEY: ${{ secrets.NEWS_API_KEY }}
-          RECIPIENTS: ${{ secrets.RECIPIENTS }}
+#        env:
+#          EMAIL: ${{ secrets.EMAIL }}
+#          APP_PASSWORD: ${{ secrets.APP_PASSWORD }}
+#          NEWS_API_KEY: ${{ secrets.NEWS_API_KEY }}
+#          RECIPIENTS: ${{ secrets.RECIPIENTS }}
 
       - name: Send Daily News
         run: python main.py

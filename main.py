@@ -5,8 +5,10 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
 from datetime import datetime, timedelta
+from bs4 import BeautifulSoup
 import pdfkit  # PDF 변환용 (pip install pdfkit)
 import tempfile
+import re
 
 # 환경변수 불러오기
 EMAIL = os.getenv("EMAIL")
@@ -123,62 +125,153 @@ def get_kr_real_estate_news():
     articles = filter_real_estate_articles(articles)
     return articles[:10]  # 최대 10개
 
+# 중복 기사 제거
+def remove_duplicates(articles):
+    seen = set()
+    unique = []
+
+    for article in articles:
+        title = article.get('title')
+        if title not in seen:
+            seen.add(title)
+            unique.append(article)
+
+    return unique
+
+
+# 중요도 선별
+def rank_articles(articles):
+    ranked = []
+
+    for article in articles:
+        text = (article.get('title','') + ' ' + article.get('content','')).lower()
+        
+        score = sum(1 for kw in KEYWORDS if kw.lower() in text)
+
+        ranked.append((score, article))
+
+    # 점수 높은 순 정렬
+    ranked.sort(key=lambda x: x[0], reverse=True)
+
+    # article만 추출
+    return [a[1] for a in ranked]
+
+
+# 뉴스 본문 가져오기
+def get_full_article(url):
+    try:
+        headers = {
+            "User-Agent": "Mozilla/5.0"
+        }
+        res = requests.get(url, headers=headers, timeout=5)
+        soup = BeautifulSoup(res.text, 'html.parser')
+
+        paragraphs = soup.find_all('p')
+        text = ' '.join(p.get_text() for p in paragraphs)
+
+        # 너무 짧으면 실패로 간주
+        if len(text) < 200:
+            return ""
+
+        return text
+    except:
+        return ""
 
 # 뉴스요약
-def summarize(text, max_words=50):
-    """
-    간단 요약 함수: 텍스트를 max_words 단어로 자르고 '...' 추가
-    """
+def summarize(text, max_sentences=2):
     if not text:
         return "내용 없음"
-    
-    # 한글 기준으로 공백 기준 단어 분리
-    words = text.split()
-    
-    if len(words) <= max_words:
-        return text
-    
-    return ' '.join(words[:max_words]) + '...'
 
+    text = re.sub(r'\s+', ' ', text)
+    sentences = re.split(r'[.!?]', text)
+    sentences = [s.strip() for s in sentences if len(s.strip()) > 20]
+
+    if not sentences:
+        return "요약할 내용 없음"
+
+    return '. '.join(sentences[:max_sentences]) + '.'
 
 # -----------------------------
 # 보고서 생성 (HTML)
 # -----------------------------
 def make_html_report(news_list, from_date, to_date):
     period = f"{from_date.strftime('%Y-%m-%d')} ~ {to_date.strftime('%Y-%m-%d')}"
-    
+
     html = f"""
     <html>
     <head>
         <meta charset="UTF-8">
         <style>
             body {{
-                font-family: 'NanumGothic', 'Apple SD Gothic Neo', sans-serif;
-                line-height: 1.5;
+                font-family: Arial, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+                background-color: #f4f6f8;
+                padding: 30px;
             }}
-            h2 {{ color: #2c3e50; }}
-            h3 {{ margin-bottom: 5px; }}
-            p {{ margin-top: 0; margin-bottom: 15px; }}
+            .container {{
+                max-width: 800px;
+                margin: auto;
+                background: white;
+                padding: 30px;
+                border-radius: 10px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            }}
+            h1 {{
+                text-align: center;
+                color: #2c3e50;
+            }}
+            .period {{
+                text-align: center;
+                color: gray;
+                margin-bottom: 30px;
+            }}
+            .news {{
+                margin-bottom: 25px;
+            }}
+            .news-title {{
+                font-size: 18px;
+                font-weight: bold;
+                color: #34495e;
+            }}
+            .news-content {{
+                margin-top: 8px;
+                color: #555;
+            }}
+            .link {{
+                margin-top: 5px;
+                font-size: 13px;
+            }}
+            hr {{
+                border: none;
+                border-top: 1px solid #eee;
+                margin: 20px 0;
+            }}
         </style>
     </head>
     <body>
-        <h2>한국 부동산 뉴스 요약 ({period})</h2>
+        <div class="container">
+            <h1>한국 부동산 뉴스 리포트</h1>
+            <div class="period">{period}</div>
     """
+
     if not news_list:
-        html += "<p>이번 기간 동안 한국 부동산 관련 뉴스가 없습니다.</p>"
-        html += "</body></html>"
+        html += "<p>이번 기간 동안 뉴스가 없습니다.</p></div></body></html>"
         return html
 
     for i, article in enumerate(news_list, 1):
-        content = summarize(article.get('content', '내용 없음'), max_words=50)
+        full_text = get_full_article(article['url'])
+        content_source = full_text if full_text else article.get('description', '')
+        content = summarize(content_source, max_sentences=2)
+
         html += f"""
-        <h3>{i}. {article['title']}</h3>
-        <p>{content}</p>
-        <p><a href="{article['url']}">원문 보기</a></p>
+        <div class="news">
+            <div class="news-title">{i}. {article['title']}</div>
+            <div class="news-content">{content}</div>
+            <div class="link"><a href="{article['url']}">기사 원문 보기 →</a></div>
+        </div>
         <hr>
         """
 
-    html += "</body></html>"
+    html += "</div></body></html>"
     return html
 
 # -----------------------------
@@ -218,6 +311,12 @@ def send_email(html_content, pdf_path):
 if __name__ == "__main__":
     print("뉴스 수집 시작...")
     kr_news = get_kr_real_estate_news()
+
+    print("중복 뉴스 제거...")
+    kr_news = remove_duplicates(kr_news)
+
+    print("중요 뉴스 정렬...")
+    kr_news = rank_articles(kr_news)[:5]
     
     print("보고서 생성...")
     html_report = make_html_report(kr_news, from_date, to_date)
