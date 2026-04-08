@@ -24,9 +24,16 @@ for name, val in [("EMAIL", EMAIL), ("APP_PASSWORD", APP_PASSWORD),
         raise ValueError(f"{name} 환경변수가 설정되지 않음")
 
 # 안전하게 split 처리
-recipients = [r.strip() for r in RECIPIENTS.split(",") if r.strip()]
-if not recipients:
-    raise ValueError("RECIPIENTS 환경변수가 비어있습니다.")
+def get_recipients():
+    env_val = os.getenv("RECIPIENTS", "")
+    # 쉼표로 나누고 공백 제거, 중복 제거
+    recipients_list = list({r.strip() for r in env_val.split(",") if r.strip()})
+    if not recipients_list:
+        raise ValueError("RECIPIENTS 환경변수가 비어있습니다.")
+    return recipients_list
+
+recipients = get_recipients()
+
 
 KEYWORDS = [
     "부동산", "상가 매매", "아파트 매매", 
