@@ -114,7 +114,7 @@ def get_kr_real_estate_news():
         f"to={to_str}&"
         f"language=ko&"
         f"sortBy=publishedAt&"
-        f"pageSize=50&
+        f"pageSize=50&"
         f"apiKey={NEWS_API_KEY}"
     )
     res = requests.get(url)
