@@ -86,7 +86,7 @@ if not recipients:
 KEYWORDS = [
     "부동산", "상가 매매", "아파트 매매", 
     "집값", "전세", "월세", "부동산 정책",
-    "부동산 규제", "서울 부동산",
+    "부동산 규제", "서울 부동산", "삼성동 개발", "강동구 개발",
     "강남 부동산", "수도권 아파트"]
 
 # 지난 7일 뉴스 날짜 범위
@@ -109,11 +109,12 @@ def get_kr_real_estate_news():
     query = " OR ".join(KEYWORDS)
     url = (
         f"https://newsapi.org/v2/everything?"
-        f"qInTitle={query}&"
+        f"q={query}&"
         f"from={from_str}&"
         f"to={to_str}&"
         f"language=ko&"
         f"sortBy=publishedAt&"
+        f"pageSize=50&
         f"apiKey={NEWS_API_KEY}"
     )
     res = requests.get(url)
